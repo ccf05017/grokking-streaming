@@ -9,6 +9,7 @@ public class VehicleEvent extends Event {
     this.type = type;
   }
 
+  // 이 프레임워크에서의 라이프사이클 Hook
   @Override
   public String getData() {
     return type;
