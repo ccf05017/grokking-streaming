@@ -15,5 +15,5 @@ public abstract class Source extends Component {
    * The function is abstract and needs to be implemented by users.
    * @param eventCollector The outgoing event collector
    */
-  public abstract void getEvents(List<Event> eventCollector);
+  public abstract void getEvents(List<Event> eventCollector) throws InterruptedException;
 }
