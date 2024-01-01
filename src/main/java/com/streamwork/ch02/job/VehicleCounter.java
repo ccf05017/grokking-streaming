@@ -9,14 +9,12 @@ import java.util.Map;
 import com.streamwork.ch02.api.Event;
 import com.streamwork.ch02.api.Operator;
 import com.streamwork.ch02.vo.VehicleFee;
+import com.streamwork.ch02.vo.VehicleResult;
 
 class VehicleCounter extends Operator {
   private static final int DEFAULT_COUNTER = 0;
   private static final int COUNTER_INCREMENT_VALUE = 1;
   private static final int INITIAL_FEE = 0;
-
-  private final Map<String, Integer> countMap = new HashMap<String, Integer>();
-  private final Map<String, Integer> feeMap = new HashMap<>();
 
   public VehicleCounter(String name) {  super(name);  }
 
@@ -24,34 +22,22 @@ class VehicleCounter extends Operator {
   public void apply(Event vehicleEvent, List<Event> eventCollector) {
     String vehicleTypeName = ((VehicleEvent)vehicleEvent).getData();
 
-    processCounting(countMap, vehicleTypeName);
+    processCounting(vehicleTypeName);
     processFee(vehicleTypeName);
 
-    System.out.println("VehicleCounter --> ");
-    printResult();
+    // 다음 Operator에 넘겨주려면 eventCollector에 새로 이벤트를 쏴줘야 함.
+    // 이걸 알았다면 계산 후 새로운 이벤트를 만들고 이를 옮기는 방법이 가능했음 (지금은 그냥 static 클래스를 하나 만듦)
+    // 바꿔야 하지만 귀찮으니까 일단 여기까지만 하고 패스!
+    eventCollector.add(vehicleEvent);
   }
 
   private void processFee(String vehicleTypeName) {
-    Integer fee = feeMap.getOrDefault(vehicleTypeName, INITIAL_FEE) + VehicleFee.getFee(vehicleTypeName);
-    feeMap.put(vehicleTypeName, fee);
+    Integer fee = VehicleResult.getOrDefaultOfFeeMap(vehicleTypeName, INITIAL_FEE) + VehicleFee.getFee(vehicleTypeName);
+    VehicleResult.updateFeeMap(vehicleTypeName, fee);
   }
 
-  private void processCounting(Map<String, Integer> countMap, String vehicleTypeName) {
-    Integer count = countMap.getOrDefault(vehicleTypeName, DEFAULT_COUNTER) + COUNTER_INCREMENT_VALUE;
-    countMap.put(vehicleTypeName, count);
-  }
-
-  private void printResult() {
-    // 프로덕션에서 이렇게 쓰긴 어려울듯 함.
-    // VehicleType 컬렉션을 따로 만들고 이를 fee랑 counter가 같이 사용하도록 해야될듯.
-    // 큰 문제는 없겠지만 Map 간 키가 다르게 들어가거나 한쪽에 없는 키가 생길 경우가 있을 수 있기 때문에 이를 대비해야 함
-    List<String> vehicles = new ArrayList<>(countMap.keySet());
-    Collections.sort(vehicles);
-
-    for (String vehicle: vehicles) {
-      System.out.println("  " + vehicle + ": " + countMap.get(vehicle));
-      System.out.println("  " + vehicle + " fee: " + feeMap.get(vehicle));
-      System.out.println("==========================================================");
-    }
+  private void processCounting(String vehicleTypeName) {
+    Integer count = VehicleResult.getOrDefaultOfCountMap(vehicleTypeName, DEFAULT_COUNTER) + COUNTER_INCREMENT_VALUE;
+    VehicleResult.updateCountMap(vehicleTypeName, count);
   }
 }
